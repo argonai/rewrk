@@ -114,7 +114,10 @@ async fn run(settings: BenchmarkSettings) -> Result<()> {
     let mut combiner = WorkerResult::default();
     while let Some(result) = handles.next().await {
         match result.unwrap() {
-            Ok(stats) => combiner = combiner.combine(stats),
+            Ok(stats) => {
+                stats.display_json(); 
+                combiner = combiner.combine(stats)
+            },
             Err(e) => return Err(anyhow!("connection error: {}", e)),
         }
     }
