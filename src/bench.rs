@@ -1,4 +1,6 @@
 use std::fmt::Display;
+use std::fs::File;
+use std::io::Write;
 use std::time::Duration;
 
 use ::http::{HeaderMap, Method};
@@ -121,6 +123,9 @@ async fn run(settings: BenchmarkSettings) -> Result<()> {
             Err(e) => return Err(anyhow!("connection error: {}", e)),
         }
     }
+    let mut file: File = File::open("foo.txt")?;
+    let _ = file.write(b"test1");
+    combiner.write_csv(&mut file);
 
     if settings.display_json {
         combiner.display_json();

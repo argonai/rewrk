@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::write, fs::File, io::Write};
 
 use colored::Colorize;
 use serde_json::json;
@@ -291,6 +291,12 @@ impl WorkerResult {
                 println!("{} Errors: {}", count, message);
             }
         }
+    }
+    fn write_headers(&self, file: &mut File){
+        file.write_all(b"test");
+    }
+    pub fn write_csv(&self, file: &mut File){
+        self.write_headers(file) 
     }
 
     pub fn display_json(&self) {
