@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::time::Duration;
+use std::time::{Duration,  SystemTime, UNIX_EPOCH};
 
 use anyhow::anyhow;
 use futures_util::stream::FuturesUnordered;
@@ -20,6 +20,7 @@ use tower::Service;
 
 use self::usage::Usage;
 use self::user_input::{Scheme, UserInput};
+use crate::measurement::Measurement;
 use crate::results::WorkerResult;
 
 mod usage;
@@ -103,6 +104,7 @@ async fn benchmark(
     request_headers.extend(user_input.headers);
 
     let mut request_times = Vec::new();
+    let mut measurements = Vec::new();
     let mut error_map = HashMap::new();
 
     // Benchmark loop.
@@ -137,9 +139,9 @@ async fn benchmark(
                 result = future => result.map(|_| ()).map_err(Into::into),
             }
         };
-
+        let system_request_start = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis();
         let request_start = Instant::now();
-
+        //add start time to measurement here
         // Try to resolve future before benchmark deadline is elapsed.
         if let Ok(result) = timeout_at(deadline, future).await {
             if let Err(e) = result {
@@ -166,7 +168,12 @@ async fn benchmark(
             // Benchmark deadline is elapsed. Break the loop.
             break;
         }
-
+        // add duration to measurements here
+        let measured = Measurement {
+            start_time: system_request_start, 
+            recorded_latency: request_start.elapsed(),
+        };
+        measurements.push(measured);
         request_times.push(request_start.elapsed());
     }
 
@@ -175,6 +182,7 @@ async fn benchmark(
         request_times,
         buffer_sizes: vec![connector.get_received_bytes()],
         error_map,
+        measurements,
     })
 }
 

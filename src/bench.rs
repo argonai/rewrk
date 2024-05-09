@@ -49,6 +49,9 @@ pub struct BenchmarkSettings {
 
     /// Request body.
     pub body: Bytes,
+
+    /// Output file path.
+    pub file: String
 }
 
 /// Builds the runtime with the given settings and blocks on the main future.
@@ -123,10 +126,10 @@ async fn run(settings: BenchmarkSettings) -> Result<()> {
             Err(e) => return Err(anyhow!("connection error: {}", e)),
         }
     }
-    let mut file: File = File::open("foo.txt")?;
-    let _ = file.write(b"test1");
-    combiner.write_csv(&mut file);
-
+    if !settings.file.is_empty(){
+        let mut file: File = File::create(settings.file)?;
+        combiner.write_csv(&mut file);
+    }
     if settings.display_json {
         combiner.display_json();
         return Ok(());

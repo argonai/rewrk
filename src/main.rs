@@ -15,6 +15,7 @@ mod http;
 mod results;
 mod runtime;
 mod utils;
+mod measurement;
 
 use crate::http::BenchType;
 
@@ -53,6 +54,13 @@ fn main() {
             eprintln!("missing 'host' parameter.");
             return;
         },
+    };
+    let file: &str = match args.value_of("file") {
+        Some(f) => f,
+        None => {
+            eprintln!("missing 'file' parameter.");
+            return;
+        }
     };
 
     let http2: bool = args.is_present("http2");
@@ -121,6 +129,7 @@ fn main() {
         method,
         headers,
         body,
+        file: file.to_string(),
     };
 
     bench::start_benchmark(settings);
@@ -273,6 +282,14 @@ fn parse_args() -> ArgMatches<'static> {
                 .help("Add body to request e.g. '-b \"foo\"'")
                 .takes_value(true)
                 .required(false),
+        )
+        .arg(
+            Arg::with_name("file")
+                .long("file")
+                .short("f")
+                .help("Outputs to csv file e.g. '-f output.csv'")
+                .takes_value(true)
+                .required(false)
         )
         //.arg(
         //    Arg::with_name("random")

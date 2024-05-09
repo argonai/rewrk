@@ -6,7 +6,7 @@ use colored::Colorize;
 use serde_json::json;
 use tokio::time::Duration;
 
-use crate::utils::format_data;
+use crate::{measurement::Measurement, utils::format_data};
 
 fn get_percentile(request_times: &[Duration], pct: f64) -> Duration {
     let mut len = request_times.len() as f64 * pct;
@@ -38,6 +38,8 @@ pub struct WorkerResult {
 
     /// Error counting map.
     pub error_map: HashMap<String, usize>,
+
+    pub measurements: Vec<Measurement>,
 }
 
 impl WorkerResult {
@@ -49,6 +51,7 @@ impl WorkerResult {
             request_times: vec![],
             buffer_sizes: vec![],
             error_map: HashMap::new(),
+            measurements: vec![],
         }
     }
 
@@ -57,6 +60,7 @@ impl WorkerResult {
         self.request_times.extend(other.request_times);
         self.total_times.extend(other.total_times);
         self.buffer_sizes.extend(other.buffer_sizes);
+        self.measurements.extend(other.measurements);
 
         // Insert/add new errors to current error map.
         for (message, count) in other.error_map {
@@ -293,10 +297,13 @@ impl WorkerResult {
         }
     }
     fn write_headers(&self, file: &mut File){
-        file.write_all(b"test");
+        file.write_all(b"start_time,latency\n");
     }
     pub fn write_csv(&self, file: &mut File){
-        self.write_headers(file) 
+        self.write_headers(file); 
+        for item in &self.measurements {
+           item.write_result(file) 
+        }
     }
 
     pub fn display_json(&self) {
