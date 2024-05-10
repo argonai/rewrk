@@ -120,7 +120,6 @@ async fn run(settings: BenchmarkSettings) -> Result<()> {
     while let Some(result) = handles.next().await {
         match result.unwrap() {
             Ok(stats) => {
-                stats.display_json(); 
                 combiner = combiner.combine(stats)
             },
             Err(e) => return Err(anyhow!("connection error: {}", e)),
